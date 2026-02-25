@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # The "Rogue-Prone" AI Agent
+  ai_agent:
+    image: my-autonomous-agent:latest
+    container_name: ai_agent
+    environment:
+      - ENABLE_AUTONOMY=true
+    networks:
+      - secure_net
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+
+  # The Sentinel Guardrail (The Sidecar)
+  sentinel_guard:
+    build: .
+    container_name: sentinel_guard
+    # This allows Sentinel to see the Agent's Process ID
+    pid: "service:ai_agent"
+    # Shared network to monitor for data tsunamis
+    network_mode: "service:ai_agent"
+    depends_on:
+      - ai_agent
+    volumes:
+      - /sys:/sys:ro # Read-only access for hardware thermal monitoring
+    environment:
+      - TARGET_PROCESS_NAME=python # The process to watch inside the agent
+    restart: always
+
+networks:
+  secure_net:
+    driver: bridge
