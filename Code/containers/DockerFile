@@ -1,0 +1,15 @@
+# Use a slim Python base
+FROM python:3.11-slim
+
+# Install system dependencies for psutil
+RUN apt-get update && apt-get install -y gcc python3-dev && rm -rf /var/lib/apt/lists/*
+
+# Install python requirements
+RUN pip install psutil
+
+# Copy our guard script
+COPY sentinel_guard.py /app/sentinel_guard.py
+WORKDIR /app
+
+# The script will wait for the Agent's PID to appear
+ENTRYPOINT ["python", "sentinel_guard.py"]
